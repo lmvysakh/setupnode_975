@@ -58,11 +58,14 @@ jobs:
       - name: Show cache content info
         run: du -sh .cache-test-data || dir .cache-test-data
 
-      - name: Print Restore Duration
+      - name: Print Restore Duration (Ubuntu)
+        if: runner.os == 'Linux'
+        shell: bash
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            echo "Cache restore finished. (You can use workflow UI for actual duration)"
-          else
-            duration=$(( $SECONDS - ${{ steps.timer-start.outputs.start }} ))
-            echo "Cache restore duration: ${duration} seconds."
-          fi
+          duration=$(( $SECONDS - $TIMER_START ))
+          echo "Cache restore duration: ${duration} seconds."
+          
+      - name: Print Restore Duration (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "Cache restore finished. (You can use workflow UI for actual duration)"
