@@ -1,0 +1,68 @@
+name: Large Cache Save & Restore Performance Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-cache:
+    name: Create and Save 300MB Cache
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create 300MB cache data
+        shell: bash
+        run: |
+          mkdir -p .cache-test-data
+          # Create 30 files of 10MB each to total ~300MB
+          for i in $(seq 1 30); do
+            dd if=/dev/urandom of=.cache-test-data/file_$i.bin bs=1M count=10
+          done
+          du -sh .cache-test-data
+
+      - name: Save cache
+        uses: actions/cache@v4
+        with:
+          path: .cache-test-data
+          key: ${{ runner.os }}-test-cache-${{ github.run_id }}
+
+  restore-cache:
+    name: Restore 300MB Cache and Measure Time
+    needs: create-cache
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Measure time to restore cache
+        id: timer-start
+        run: echo "::set-output name=start::$SECONDS"
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: .cache-test-data
+          key: ${{ runner.os }}-test-cache-${{ github.run_id }}
+      
+      - name: Measure time after restore
+        id: timer-end
+        run: echo "::set-output name=end::$SECONDS"
+
+      - name: Show cache content info
+        run: du -sh .cache-test-data || dir .cache-test-data
+
+      - name: Print Restore Duration
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "Cache restore finished. (You can use workflow UI for actual duration)"
+          else
+            duration=$(( $SECONDS - ${{ steps.timer-start.outputs.start }} ))
+            echo "Cache restore duration: ${duration} seconds."
+          fi
