@@ -1,0 +1,44 @@
+name: Setup Node Cache Performance Test - Ubuntu latest
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  
+
+jobs:
+  cache-performance-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Show yarn version
+        run: yarn --version
+
+      - name: List installed packages (optional)
+        run: yarn list --depth=0
+
+      - name: Run Node version
+        run: node --version
