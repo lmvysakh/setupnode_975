@@ -1,4 +1,4 @@
-name: Latest Setup Node Cache Performance Test - Windows latest
+name: Check Setup Node Cache Performance Test - Windows latest
 
 on:
   workflow_dispatch:
