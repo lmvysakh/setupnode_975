@@ -1,10 +1,9 @@
-name: Setup Node Cache Performance Test - Windows latest
+name: Check Setup Node Cache Performance Test - Windows latest
 
 on:
   workflow_dispatch:
   # push:
   #   branches: [main]
-  
 
 jobs:
   cache-performance-test:
@@ -19,26 +18,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
+          cache: 'yarn'
+      - run: yarn install --frozen-lockfile # optional, --immutable
+      - run: yarn test
 
-      - name: Cache yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+     
 
-      - name: Install dependencies
-        run: yarn install
 
-      - name: Show yarn version
-        run: yarn --version
-
-      - name: List installed packages (optional)
-        run: yarn list --depth=0
-
-      - name: Run Node version
-        run: node --version
+    
