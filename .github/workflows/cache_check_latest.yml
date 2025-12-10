@@ -18,25 +18,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
+          cache: 'yarn'
+      - run: yarn install --frozen-lockfile # optional, --immutable
+      - run: yarn test
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+     
 
-      - name: Install dependencies
-        run: npm ci
 
-      - name: Show npm version
-        run: npm --version
-
-      - name: List installed packages (optional)
-        run: npm list --depth=0
-
-      - name: Run Node version
-        run: node --version
+    
