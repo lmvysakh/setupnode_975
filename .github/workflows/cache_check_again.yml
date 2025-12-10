@@ -1,0 +1,58 @@
+name: Awesome Setup Node Built-in Cache with 300MB Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  large-cache-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Yarn v2+ (berry)
+        run: |
+          corepack enable
+          yarn set version berry
+
+      - name: Create biglib (~300MB)
+        run: |
+          mkdir -p biglib
+          for i in $(seq 1 30); do
+            dd if=/dev/urandom of=biglib/random_$i.bin bs=1M count=10
+          done
+          du -sh biglib
+
+      - name: Initialize package.json if missing
+        run: |
+          if [ ! -f package.json ]; then
+            yarn init -y
+          fi
+
+      - name: Add local dependency (biglib)
+        run: |
+          yarn add file:./biglib
+
+      - name: Show .yarn/cache size (should be ~300MB)
+        run: du -sh .yarn/cache
+
+      - name: Setup Node and Enable Yarn Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Remove node_modules and biglib to test cache restore
+        run: |
+          rm -rf node_modules biglib
+
+      - name: Reinstall dependencies (should hit cache)
+        run: yarn install
+
+      - name: Check .yarn/cache size after restore
+        run: du -sh .yarn/cache
+
+      - name: List .yarn/cache
+        run: ls -lh .yarn/cache

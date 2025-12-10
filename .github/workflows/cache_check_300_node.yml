@@ -1,4 +1,4 @@
-name: Built-in Cache Performance Test (Ubuntu & Windows)
+name: Don't use - Built-in Cache Performance Test (Ubuntu & Windows)
 
 on:
   workflow_dispatch:
