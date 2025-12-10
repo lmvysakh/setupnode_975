@@ -1,0 +1,27 @@
+{
+  "name": "@lmvysakh/setupnode_975",
+  "version": "1.0.0",
+  "description": "A large dependency project for cache testing.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "build": "echo 'No build script defined'"
+  },
+  "keywords": [
+    "node",
+    "cache",
+    "setup-node",
+    "test"
+  ],
+  "author": "lmvysakh",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "lodash": "^4.17.21",
+    "axios": "^1.6.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  }
+}
