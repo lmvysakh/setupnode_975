@@ -1,4 +1,4 @@
-name: Setup Node Built-in Cache Performance Test
+name: Built-in Cache Performance Test (Ubuntu & Windows)
 
 on:
   workflow_dispatch:
