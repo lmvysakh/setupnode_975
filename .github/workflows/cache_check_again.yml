@@ -17,12 +17,13 @@ jobs:
           corepack enable
           yarn set version berry
 
-      - name: Create biglib (~300MB)
+      - name: Create biglib (~300MB) and make it a valid package
         run: |
           mkdir -p biglib
           for i in $(seq 1 30); do
             dd if=/dev/urandom of=biglib/random_$i.bin bs=1M count=10
           done
+          echo '{ "name": "biglib", "version": "1.0.0" }' > biglib/package.json
           du -sh biglib
 
       - name: Initialize package.json if missing
@@ -31,9 +32,9 @@ jobs:
             yarn init -y
           fi
 
-      - name: Add local dependency (biglib)
+      - name: Add local dependency (biglib) the Yarn Berry way
         run: |
-          yarn add file:./biglib
+          yarn add biglib@file:./biglib
 
       - name: Show .yarn/cache size (should be ~300MB)
         run: du -sh .yarn/cache
