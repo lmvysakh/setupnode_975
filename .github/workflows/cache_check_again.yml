@@ -17,8 +17,13 @@ jobs:
           corepack enable
           yarn set version berry
 
-      - name: Show Yarn version (sanity check)
+      - name: Show Yarn version (should be 3.x or higher!)
         run: yarn --version
+
+      - name: Configure Yarn for PnP Mode (enables .yarn/cache usage)
+        run: |
+          yarn config set nodeLinker pnp
+          yarn config set enableGlobalCache false
 
       - name: Create biglib (~300MB) and make it a valid package
         run: |
@@ -35,12 +40,12 @@ jobs:
             yarn init -y
           fi
 
-      - name: Add local dependency (biglib) via Yarn Berry
-        run: |
-          yarn add biglib@file:./biglib
+      - name: Add local dependency (biglib) with Yarn Berry
+        run: yarn add biglib@file:./biglib
 
-      - name: Show .yarn/cache size (should be ~300MB, or skip if not exist)
+      - name: Generate yarn.lock and .yarn/cache (should now be large)
         run: |
+          yarn install
           if [ -d .yarn/cache ]; then du -sh .yarn/cache; else echo ".yarn/cache does not exist"; fi
 
       - name: Setup Node and Enable Yarn Cache
