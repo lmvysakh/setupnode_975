@@ -1,0 +1,84 @@
+name: Setup Node Built-in Cache Performance Test (ubuntu)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-large-dependency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate large cacheable dependency (~300MB)
+        run: |
+          mkdir -p biglib
+          for i in $(seq 1 30); do
+            dd if=/dev/urandom of=biglib/random_$i.bin bs=1M count=10
+          done
+          du -sh biglib
+
+      - name: Initialize sample package.json (if missing)
+        run: |
+          if [ ! -f package.json ]; then
+            npm init -y
+          fi
+
+      - name: Add biglib as dependency
+        run: yarn add file:./biglib
+
+      - name: Show yarn.lock and .yarn/cache summary
+        run: |
+          ls -lh yarn.lock
+          ls -lh .yarn/cache || echo "No .yarn/cache (yarn v1 used)"
+
+      - name: Upload yarn.lock and biglib for next job
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-artifacts
+          path: |
+            yarn.lock
+            package.json
+            biglib
+            .yarn/cache
+          if-no-files-found: ignore
+
+  cache-restore-test:
+    needs: create-large-dependency
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-artifacts
+
+      - name: Move artifacts into repo root (if needed)
+        shell: bash
+        run: |
+          mv generated-artifacts/* .
+          rm -rf generated-artifacts
+
+      - name: Setup Node with yarn cache enabled
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies and measure restore performance
+        shell: bash
+        run: |
+          echo "Timer start: $(date +%s)"
+          start_time=$(date +%s)
+          yarn install
+          end_time=$(date +%s)
+          echo "Timer end: $end_time"
+          duration=$((end_time - start_time))
+          echo "Dependency installation (including cache restoration) took: $duration seconds"
+          du -sh node_modules || du -sh .yarn/cache || dir .yarn\cache
