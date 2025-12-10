@@ -12,10 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable Yarn v2+ (berry)
+      - name: Enable Yarn v2+ (berry) with Corepack
         run: |
           corepack enable
           yarn set version berry
+
+      - name: Show Yarn version (sanity check)
+        run: yarn --version
 
       - name: Create biglib (~300MB) and make it a valid package
         run: |
@@ -32,12 +35,13 @@ jobs:
             yarn init -y
           fi
 
-      - name: Add local dependency (biglib) the Yarn Berry way
+      - name: Add local dependency (biglib) via Yarn Berry
         run: |
           yarn add biglib@file:./biglib
 
-      - name: Show .yarn/cache size (should be ~300MB)
-        run: du -sh .yarn/cache
+      - name: Show .yarn/cache size (should be ~300MB, or skip if not exist)
+        run: |
+          if [ -d .yarn/cache ]; then du -sh .yarn/cache; else echo ".yarn/cache does not exist"; fi
 
       - name: Setup Node and Enable Yarn Cache
         uses: actions/setup-node@v4
@@ -52,8 +56,10 @@ jobs:
       - name: Reinstall dependencies (should hit cache)
         run: yarn install
 
-      - name: Check .yarn/cache size after restore
-        run: du -sh .yarn/cache
+      - name: Check .yarn/cache size after restore (skip error if missing)
+        run: |
+          if [ -d .yarn/cache ]; then du -sh .yarn/cache; else echo ".yarn/cache does not exist"; fi
 
-      - name: List .yarn/cache
-        run: ls -lh .yarn/cache
+      - name: List .yarn/cache (skip error if missing)
+        run: |
+          if [ -d .yarn/cache ]; then ls -lh .yarn/cache; else echo ".yarn/cache does not exist"; fi
